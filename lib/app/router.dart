@@ -6,6 +6,7 @@ import '../pages/new_memory_page.dart';
 import '../pages/ai_chat_page.dart';
 import '../pages/search_page.dart';
 import '../pages/settings_page.dart';
+import '../pages/login_page.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -19,6 +20,7 @@ final router = GoRouter(
         GoRoute(path: '/settings', builder: (_, __) => SettingsPage()),
       ],
     ),
+    GoRoute(path: '/login', builder: (_, __) => LoginPage()),
     GoRoute(path: '/memory/new', builder: (_, __) => NewMemoryPage()),
     GoRoute(path: '/memory/:id', builder: (_, state) => MemoryDetailPage(id: state.pathParameters['id']!)),
   ],

@@ -2,10 +2,13 @@ package handler
 
 import (
 	"net/http"
+	"strings"
+
 	"xiaoyu-memory-backend/internal/model"
 	"xiaoyu-memory-backend/internal/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type MemoryHandler struct {
@@ -16,27 +19,54 @@ func NewMemoryHandler(svc *service.MemoryService) *MemoryHandler {
 	return &MemoryHandler{svc: svc}
 }
 
-func (h *MemoryHandler) RegisterRoutes(r *gin.Engine) {
-	api := r.Group("/api")
-	api.GET("/health", h.health)
-	api.GET("/memories", h.list)
-	api.POST("/memories", h.create)
-	api.GET("/memories/:id", h.get)
-	api.PUT("/memories/:id", h.update)
-	api.DELETE("/memories/:id", h.delete)
-	api.POST("/memories/:id/summarize", h.summarize)
-}
-
-func (h *MemoryHandler) health(c *gin.Context) {
+func (h *MemoryHandler) Health(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
-func (h *MemoryHandler) list(c *gin.Context) {
+// Auth
+func (h *MemoryHandler) AuthRegister(c *gin.Context) {
+	var req struct {
+		Phone    string `json:"phone"`
+		Password string `json:"password"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"user": gin.H{
+			"id":    uuid.New().String(),
+			"phone": req.Phone,
+		},
+		"token": uuid.New().String(),
+	})
+}
+
+func (h *MemoryHandler) AuthLogin(c *gin.Context) {
+	var req struct {
+		Phone    string `json:"phone"`
+		Password string `json:"password"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"user": gin.H{
+			"id":    uuid.New().String(),
+			"phone": req.Phone,
+		},
+		"token": uuid.New().String(),
+	})
+}
+
+// Memories
+func (h *MemoryHandler) List(c *gin.Context) {
 	memories := h.svc.List()
 	c.JSON(http.StatusOK, gin.H{"memories": memories})
 }
 
-func (h *MemoryHandler) create(c *gin.Context) {
+func (h *MemoryHandler) Create(c *gin.Context) {
 	var m model.Memory
 	if err := c.ShouldBindJSON(&m); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -46,7 +76,7 @@ func (h *MemoryHandler) create(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"memory": created})
 }
 
-func (h *MemoryHandler) get(c *gin.Context) {
+func (h *MemoryHandler) Get(c *gin.Context) {
 	id := c.Param("id")
 	m, ok := h.svc.Get(id)
 	if !ok {
@@ -56,7 +86,7 @@ func (h *MemoryHandler) get(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"memory": m})
 }
 
-func (h *MemoryHandler) update(c *gin.Context) {
+func (h *MemoryHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var updates map[string]interface{}
 	if err := c.ShouldBindJSON(&updates); err != nil {
@@ -71,7 +101,7 @@ func (h *MemoryHandler) update(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"memory": m})
 }
 
-func (h *MemoryHandler) delete(c *gin.Context) {
+func (h *MemoryHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if !h.svc.Delete(id) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "memory not found"})
@@ -80,13 +110,60 @@ func (h *MemoryHandler) delete(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
 }
 
-func (h *MemoryHandler) summarize(c *gin.Context) {
+func (h *MemoryHandler) Summarize(c *gin.Context) {
 	id := c.Param("id")
-	summary, ok := h.svc.Summarize(id)
+	m, ok := h.svc.Summarize(id)
 	if !ok {
 		c.JSON(http.StatusNotFound, gin.H{"error": "memory not found"})
 		return
 	}
-	m, _ := h.svc.Get(id)
-	c.JSON(http.StatusOK, gin.H{"summary": summary, "memory": m})
+	c.JSON(http.StatusOK, gin.H{"memory": m})
+}
+
+// AI Chat
+func (h *MemoryHandler) Chat(c *gin.Context) {
+	var req struct {
+		Message  string `json:"message"`
+		History  string `json:"history"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	reply, err := h.svc.Chat(req.Message, req.History)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"reply": "抱歉，AI 服务暂时不可用。请稍后重试。"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"reply": reply})
+}
+
+// Search
+func (h *MemoryHandler) Search(c *gin.Context) {
+	q := strings.ToLower(c.Query("q"))
+	if q == "" {
+		c.JSON(http.StatusOK, gin.H{"results": []model.Memory{}})
+		return
+	}
+
+	all := h.svc.List()
+	var results []model.Memory
+	for _, m := range all {
+		if strings.Contains(strings.ToLower(m.Content), q) ||
+			strings.Contains(strings.ToLower(m.Title), q) ||
+			containsAnyTag(m.Tags, q) {
+			results = append(results, m)
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"results": results})
+}
+
+func containsAnyTag(tags []string, q string) bool {
+	for _, t := range tags {
+		if strings.Contains(strings.ToLower(t), q) {
+			return true
+		}
+	}
+	return false
 }

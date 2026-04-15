@@ -3,16 +3,19 @@ package service
 import (
 	"fmt"
 	"xiaoyu-memory-backend/internal/model"
+	"xiaoyu-memory-backend/pkg/ai"
 	"time"
 )
 
 type MemoryService struct {
-	memories map[string]model.Memory
+	memories   map[string]model.Memory
+	summarizer *ai.Summarizer
 }
 
 func NewMemoryService() *MemoryService {
 	svc := &MemoryService{
-		memories: make(map[string]model.Memory),
+		memories:   make(map[string]model.Memory),
+		summarizer: ai.NewSummarizer(),
 	}
 	svc.seed()
 	return svc
@@ -89,6 +92,9 @@ func (s *MemoryService) Update(id string, updates map[string]interface{}) (model
 	if tags, ok := updates["tags"].([]string); ok {
 		m.Tags = tags
 	}
+	if summary, ok := updates["summary"].(string); ok {
+		m.Summary = summary
+	}
 	m.UpdatedAt = time.Now()
 	s.memories[id] = m
 	return m, true
@@ -102,17 +108,34 @@ func (s *MemoryService) Delete(id string) bool {
 	return true
 }
 
-func (s *MemoryService) Summarize(id string) (string, bool) {
+func (s *MemoryService) Summarize(id string) (model.Memory, bool) {
 	m, ok := s.memories[id]
 	if !ok {
-		return "", false
+		return model.Memory{}, false
 	}
-	summary := fmt.Sprintf("这是一条%s类型的记忆：%s", m.Type, m.Title)
-	if len(m.Tags) > 0 {
-		summary += fmt.Sprintf("，标签：%v", m.Tags)
+
+	title, summary, tags, err := s.summarizer.Summarize(m.Content)
+	if err != nil {
+		// Fallback values on error
+		if title == "" {
+			title = m.Title
+		}
+		if summary == "" {
+			summary = m.Summary
+		}
+		if len(tags) == 0 {
+			tags = m.Tags
+		}
 	}
+
+	m.Title = title
 	m.Summary = summary
+	m.Tags = tags
 	m.UpdatedAt = time.Now()
 	s.memories[id] = m
-	return summary, true
+	return m, true
+}
+
+func (s *MemoryService) Chat(message, context string) (string, error) {
+	return s.summarizer.Chat(message, context)
 }
