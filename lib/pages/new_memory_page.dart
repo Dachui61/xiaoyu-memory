@@ -236,15 +236,27 @@ class _NewMemoryPageState extends ConsumerState<NewMemoryPage> {
     setState(() => _isLoading = true);
     try {
       final api = ApiService();
-      // Create memory with voice type
-      final memory = await api.createMemory({
-        'type': 'voice',
-        'content': '语音记录',
-        'media_url': path,
-      });
-      // Add to store and trigger AI summarization
+
+      // 1. Upload audio and get transcribed text
+      String text = '';
+      try {
+        text = await api.transcribeAudio(path);
+      } catch (_) {
+        // Fallback if ASR fails
+        text = '（语音转文字失败，请手动编辑）';
+      }
+
+      // 2. Create memory with transcribed text
+      final memory = await api.createVoiceMemory(path);
+      if (text.isNotEmpty) {
+        // Update content with transcribed text
+        await api.updateMemory(memory.id, {'content': text});
+      }
+
+      // 3. Add to store and trigger AI summarization
       await ref.read(memoryStoreProvider.notifier).add(memory);
       await ref.read(memoryStoreProvider.notifier).summarize(memory.id);
+
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {

@@ -51,6 +51,26 @@ class ApiService {
     return Memory.fromJson(res.data['memory']);
   }
 
+  Future<Memory> createVoiceMemory(String audioPath) async {
+    final formData = FormData.fromMap({
+      'audio': MultipartFile.fromFile(audioPath, filename: 'voice.m4a'),
+    });
+    final res = await _dio.post('/memories', data: formData, options: Options(
+      headers: {if (_token != null) 'Authorization': 'Bearer $_token'},
+    ));
+    return Memory.fromJson(res.data['memory']);
+  }
+
+  Future<String> transcribeAudio(String audioPath) async {
+    final formData = FormData.fromMap({
+      'audio': MultipartFile.fromFile(audioPath, filename: 'voice.m4a'),
+    });
+    final res = await _dio.post('/asr', data: formData, options: Options(
+      headers: {if (_token != null) 'Authorization': 'Bearer $_token'},
+    ));
+    return res.data['text'] ?? '';
+  }
+
   Future<Memory> getMemory(String id) async {
     final res = await _dio.get('/memories/$id', options: Options(headers: _headers));
     return Memory.fromJson(res.data['memory']);
