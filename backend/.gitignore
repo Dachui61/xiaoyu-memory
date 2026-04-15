@@ -1,0 +1,5 @@
+*.db
+*.db-shm
+*.db-wal
+backend/xiaoyu-memory-backend
+*.exe
