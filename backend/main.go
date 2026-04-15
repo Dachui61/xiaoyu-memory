@@ -40,6 +40,7 @@ func main() {
 	// Initialize handlers
 	memoryHandler := handler.NewMemoryHandler(memorySvc)
 	authHandler := handler.NewAuthHandler(userRepo)
+	asrHandler := handler.NewASRHandler()
 
 	// Setup Gin
 	r := gin.Default()
@@ -74,6 +75,9 @@ func main() {
 
 		// AI Chat
 		api.POST("/chat", memoryHandler.Chat)
+
+		// ASR (Speech to Text)
+		api.POST("/asr", asrHandler.Transcribe)
 
 		// Search
 		api.GET("/search", memoryHandler.Search)

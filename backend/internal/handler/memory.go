@@ -1,11 +1,16 @@
 package handler
 
 import (
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"xiaoyu-memory-backend/internal/model"
 	"xiaoyu-memory-backend/internal/service"
+	"xiaoyu-memory-backend/pkg/ai"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -13,10 +18,11 @@ import (
 
 type MemoryHandler struct {
 	svc *service.MemoryService
+	asr *ai.ASR
 }
 
 func NewMemoryHandler(svc *service.MemoryService) *MemoryHandler {
-	return &MemoryHandler{svc: svc}
+	return &MemoryHandler{svc: svc, asr: ai.NewASR()}
 }
 
 func (h *MemoryHandler) Health(c *gin.Context) {
@@ -34,10 +40,7 @@ func (h *MemoryHandler) AuthRegister(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"user": gin.H{
-			"id":    uuid.New().String(),
-			"phone": req.Phone,
-		},
+		"user": gin.H{"id": uuid.New().String(), "phone": req.Phone},
 		"token": uuid.New().String(),
 	})
 }
@@ -52,10 +55,7 @@ func (h *MemoryHandler) AuthLogin(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"user": gin.H{
-			"id":    uuid.New().String(),
-			"phone": req.Phone,
-		},
+		"user": gin.H{"id": uuid.New().String(), "phone": req.Phone},
 		"token": uuid.New().String(),
 	})
 }
@@ -67,10 +67,61 @@ func (h *MemoryHandler) List(c *gin.Context) {
 }
 
 func (h *MemoryHandler) Create(c *gin.Context) {
+	// Check if multipart (voice memory with audio file)
+	contentType := c.ContentType()
+	if strings.HasPrefix(contentType, "multipart/form-data") {
+		h.createVoiceMemory(c)
+		return
+	}
+
 	var m model.Memory
 	if err := c.ShouldBindJSON(&m); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+	created := h.svc.Create(m)
+	c.JSON(http.StatusCreated, gin.H{"memory": created})
+}
+
+func (h *MemoryHandler) createVoiceMemory(c *gin.Context) {
+	file, header, err := c.Request.FormFile("audio")
+	if err == nil {
+		defer file.Close()
+		ext := filepath.Ext(header.Filename)
+		if ext == "" {
+			ext = ".m4a"
+		}
+		tmpPath := filepath.Join(os.TempDir(), fmt.Sprintf("voice_%s%s", uuid.New().String(), ext))
+		out, _ := os.Create(tmpPath)
+		io.Copy(out, file)
+		out.Close()
+		defer os.Remove(tmpPath)
+
+		text, _ := h.asr.Transcribe(tmpPath)
+		if text == "" {
+			text = "（语音转文字失败，请手动输入）"
+		}
+		m := model.Memory{
+			ID:        uuid.New().String(),
+			UserID:    "u1",
+			Type:      "voice",
+			Content:   text,
+			MediaURL:  header.Filename,
+		}
+		created := h.svc.Create(m)
+		c.JSON(http.StatusCreated, gin.H{"memory": created, "transcribed": text})
+		return
+	}
+
+	content := c.PostForm("content")
+	m := model.Memory{
+		ID:      uuid.New().String(),
+		UserID:  "u1",
+		Type:    c.PostForm("type"),
+		Content: content,
+	}
+	if m.Type == "" {
+		m.Type = "text"
 	}
 	created := h.svc.Create(m)
 	c.JSON(http.StatusCreated, gin.H{"memory": created})
@@ -123,8 +174,8 @@ func (h *MemoryHandler) Summarize(c *gin.Context) {
 // AI Chat
 func (h *MemoryHandler) Chat(c *gin.Context) {
 	var req struct {
-		Message  string `json:"message"`
-		History  string `json:"history"`
+		Message string `json:"message"`
+		History string `json:"history"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
@@ -147,23 +198,9 @@ func (h *MemoryHandler) Search(c *gin.Context) {
 		return
 	}
 
-	all := h.svc.List()
-	var results []model.Memory
-	for _, m := range all {
-		if strings.Contains(strings.ToLower(m.Content), q) ||
-			strings.Contains(strings.ToLower(m.Title), q) ||
-			containsAnyTag(m.Tags, q) {
-			results = append(results, m)
-		}
+	results, err := h.svc.Search("u1", q)
+	if err != nil || results == nil {
+		results = []model.Memory{}
 	}
 	c.JSON(http.StatusOK, gin.H{"results": results})
-}
-
-func containsAnyTag(tags []string, q string) bool {
-	for _, t := range tags {
-		if strings.Contains(strings.ToLower(t), q) {
-			return true
-		}
-	}
-	return false
 }
