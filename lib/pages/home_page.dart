@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../app/theme.dart';
 import '../stores/memory_store.dart';
 import '../widgets/memory_card.dart';
-import '../models/memory.dart';
+
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -40,7 +40,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.auto_awesome, size: 64, color: AppTheme.textSecondary.withOpacity(0.5)),
+                  Icon(Icons.auto_awesome, size: 64, color: AppTheme.textSecondary.withValues(alpha: 0.5)),
                   SizedBox(height: 16),
                   Text('还没有记忆', style: TextStyle(fontSize: 17, color: AppTheme.textSecondary)),
                   SizedBox(height: 8),

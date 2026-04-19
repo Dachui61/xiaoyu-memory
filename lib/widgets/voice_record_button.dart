@@ -120,8 +120,8 @@ class _VoiceRecordButtonState extends State<VoiceRecordButton> with SingleTicker
                     color: AppTheme.voiceRed,
                     shape: BoxShape.circle,
                     boxShadow: _recording
-                        ? [BoxShadow(color: AppTheme.voiceRed.withOpacity(0.4), blurRadius: 20, spreadRadius: 4)]
-                        : [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 8, offset: Offset(0, 3))],
+                        ? [BoxShadow(color: AppTheme.voiceRed.withValues(alpha: 0.4), blurRadius: 20, spreadRadius: 4)]
+                        : [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 8, offset: Offset(0, 3))],
                   ),
                   child: Icon(_recording ? Icons.stop : Icons.mic, color: Colors.white, size: 28),
                 ),

@@ -33,9 +33,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   void _loadProfile() {
-    final user = ref.read(authStoreProvider);
+    final user = ref.watch(authStoreProvider);
     if (user != null) {
-      _nicknameController.text = user.phone;
+      _nicknameController.text = user.nickname.isNotEmpty ? user.nickname : user.phone;
       _phoneController.text = user.phone;
     }
   }

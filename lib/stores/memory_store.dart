@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/memory.dart';
 import '../services/api_service.dart';
@@ -38,7 +39,7 @@ class MemoryStore extends StateNotifier<AsyncValue<List<Memory>>> {
       state.whenData((list) {
         state = AsyncValue.data(list.where((m) => m.id != id).toList());
       });
-    } catch (e) {}
+    } catch (e, st) { debugPrint('Error: $e\n$st'); }
   }
 
   Future<void> update(Memory memory) async {
@@ -47,7 +48,7 @@ class MemoryStore extends StateNotifier<AsyncValue<List<Memory>>> {
       state.whenData((list) {
         state = AsyncValue.data(list.map((m) => m.id == memory.id ? updated : m).toList());
       });
-    } catch (e) {}
+    } catch (e, st) { debugPrint('Error: $e\n$st'); }
   }
 
   Future<void> summarize(String id) async {
@@ -56,6 +57,6 @@ class MemoryStore extends StateNotifier<AsyncValue<List<Memory>>> {
       state.whenData((list) {
         state = AsyncValue.data(list.map((m) => m.id == id ? summarized : m).toList());
       });
-    } catch (e) {}
+    } catch (e, st) { debugPrint('Error: $e\n$st'); }
   }
 }

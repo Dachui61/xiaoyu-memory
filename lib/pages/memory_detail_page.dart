@@ -38,7 +38,7 @@ class MemoryDetailPage extends ConsumerWidget {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.1),
+                    color: AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -65,7 +65,7 @@ class MemoryDetailPage extends ConsumerWidget {
                 spacing: 8,
                 children: memory.tags.map((t) => Container(
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                  decoration: BoxDecoration(color: AppTheme.aiPurple.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(color: AppTheme.aiPurple.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                   child: Text(t, style: TextStyle(fontSize: 13, color: AppTheme.aiPurple)),
                 )).toList(),
               ),
@@ -85,9 +85,9 @@ class MemoryDetailPage extends ConsumerWidget {
                 width: double.infinity,
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [AppTheme.aiPurple.withOpacity(0.1), AppTheme.primary.withOpacity(0.05)]),
+                  gradient: LinearGradient(colors: [AppTheme.aiPurple.withValues(alpha: 0.1), AppTheme.primary.withValues(alpha: 0.05)]),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.aiPurple.withOpacity(0.2)),
+                  border: Border.all(color: AppTheme.aiPurple.withValues(alpha: 0.2)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
