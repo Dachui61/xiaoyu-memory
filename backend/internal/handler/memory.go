@@ -183,7 +183,32 @@ func (h *MemoryHandler) Chat(c *gin.Context) {
 		return
 	}
 
-	reply, err := h.svc.Chat(req.Message, req.History)
+	context := req.History
+
+	// Check if user is asking about their memories
+	memoryKeywords := []string{"记忆", "记得", "我的经历", "过去", "曾经", "存储", "记录", "有哪些", "记得什么"}
+	shouldQueryMemories := false
+	for _, kw := range memoryKeywords {
+		if strings.Contains(req.Message, kw) {
+			shouldQueryMemories = true
+			break
+		}
+	}
+
+	if shouldQueryMemories {
+		memories := h.svc.List()
+		if len(memories) > 0 {
+			var memoryContext strings.Builder
+			memoryContext.WriteString("以下是用户的记忆记录：\n")
+			for _, m := range memories {
+				memoryContext.WriteString(fmt.Sprintf("- [%s] %s\n", m.Title, m.Content))
+			}
+			memoryContext.WriteString("\n请根据以上记忆回答用户的问题。\n")
+			context = memoryContext.String() + context
+		}
+	}
+
+	reply, err := h.svc.Chat(req.Message, context)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"reply": "抱歉，AI 服务暂时不可用。请稍后重试。"})
 		return

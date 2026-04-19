@@ -50,7 +50,7 @@ class _AiChatPageState extends ConsumerState<AiChatPage> {
 
       if (mounted) {
         setState(() {
-          _messages[aiIndex] = _Msg(role: 'ai', text: reply);
+          _messages[aiIndex] = _Msg(role: 'ai', text: _stripThinkTags(reply));
         });
         _scrollToBottom();
       }
@@ -79,6 +79,12 @@ class _AiChatPageState extends ConsumerState<AiChatPage> {
         );
       }
     });
+  }
+
+  String _stripThinkTags(String text) {
+    // Remove <think>...</think> thinking tags from AI response
+    final thinkRegex = RegExp(r'<think>[\s\S]*?<\/think>', caseSensitive: false);
+    return text.replaceAll(thinkRegex, '').trim();
   }
 
   @override
