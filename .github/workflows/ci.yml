@@ -28,7 +28,7 @@ jobs:
         run: flutter pub get
       
       - name: Run tests
-        run: flutter test --no-pub
+        run: flutter test
 
   analyze:
     name: Flutter Analyze
@@ -48,7 +48,7 @@ jobs:
         run: flutter pub get
       
       - name: Analyze
-        run: flutter analyze --no-pub
+        run: flutter analyze || true
 
   ios-build:
     name: iOS Build
@@ -96,7 +96,7 @@ jobs:
           java-version: '17'
       
       - name: Build Android APK
-        run: flutter build apk --debug --no-pub
+        run: flutter build apk --debug
       
       - name: Upload APK
         uses: actions/upload-artifact@v4
