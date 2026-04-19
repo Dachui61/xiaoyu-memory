@@ -110,4 +110,13 @@ class ApiService {
       'phone': phone,
     }, options: Options(headers: _headers));
   }
+
+  // Sync
+  Future<Map<String, dynamic>> sync(int lastSync, List<Memory> changes) async {
+    final res = await _dio.post('/sync', data: {
+      'last_sync': lastSync,
+      'changes': changes.map((m) => m.toJson()).toList(),
+    }, options: Options(headers: _headers));
+    return res.data;
+  }
 }

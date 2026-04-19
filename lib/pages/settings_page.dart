@@ -2,13 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../app/theme.dart';
+import '../services/notification_service.dart';
 import '../stores/auth_store.dart';
 
-class SettingsPage extends ConsumerWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends ConsumerState<SettingsPage> {
+  bool _notificationsEnabled = true;
+  final NotificationService _notificationService = NotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationSetting();
+  }
+
+  Future<void> _loadNotificationSetting() async {
+    await _notificationService.initialize();
+    final enabled = await _notificationService.isNotificationEnabled();
+    if (mounted) {
+      setState(() => _notificationsEnabled = enabled);
+    }
+  }
+
+  Future<void> _toggleNotifications(bool value) async {
+    await _notificationService.setNotificationEnabled(value);
+    setState(() => _notificationsEnabled = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('设置')),
       body: ListView(
@@ -25,7 +53,7 @@ class SettingsPage extends ConsumerWidget {
           _buildTile(icon: Icons.cloud_upload_outlined, title: '云存储使用', subtitle: '2.3 GB / 5 GB', onTap: () {}),
 
           _buildSectionHeader('通知'),
-          _buildTile(icon: Icons.notifications_outlined, title: '推送通知', trailing: Switch(value: true, onChanged: (_) {}, activeThumbColor: AppTheme.primary)),
+          _buildTile(icon: Icons.notifications_outlined, title: '推送通知', trailing: Switch(value: _notificationsEnabled, onChanged: _toggleNotifications, activeThumbColor: AppTheme.primary)),
           _buildTile(icon: Icons.schedule, title: '提醒时间', subtitle: '每天 09:00', onTap: () {}),
 
           _buildSectionHeader('其他'),
