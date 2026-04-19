@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../app/theme.dart';
+import '../stores/auth_store.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: Text('设置')),
       body: ListView(
@@ -22,14 +25,14 @@ class SettingsPage extends StatelessWidget {
           _buildTile(icon: Icons.cloud_upload_outlined, title: '云存储使用', subtitle: '2.3 GB / 5 GB', onTap: () {}),
 
           _buildSectionHeader('通知'),
-          _buildTile(icon: Icons.notifications_outlined, title: '推送通知', trailing: Switch(value: true, onChanged: (_) {}, activeColor: AppTheme.primary)),
+          _buildTile(icon: Icons.notifications_outlined, title: '推送通知', trailing: Switch(value: true, onChanged: (_) {}, activeThumbColor: AppTheme.primary)),
           _buildTile(icon: Icons.schedule, title: '提醒时间', subtitle: '每天 09:00', onTap: () {}),
 
           _buildSectionHeader('其他'),
           _buildTile(icon: Icons.auto_awesome, title: '小宇记忆 Pro', subtitle: '解锁全部功能', onTap: () {}),
           _buildTile(icon: Icons.help_outline, title: '帮助与反馈', onTap: () {}),
           _buildTile(icon: Icons.info_outline, title: '关于', subtitle: '版本 1.0.0', onTap: () {}),
-          _buildTile(icon: Icons.logout, title: '退出登录', titleColor: AppTheme.voiceRed, onTap: () => _logout(context)),
+          _buildTile(icon: Icons.logout, title: '退出登录', titleColor: AppTheme.voiceRed, onTap: () => _logout(context, ref)),
 
           SizedBox(height: 40),
         ],
@@ -61,17 +64,24 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _logout(BuildContext context) {
-    showDialog(
+  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('退出登录'),
         content: Text('确定要退出当前账号吗？'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('取消')),
-          TextButton(onPressed: () { Navigator.pop(ctx); }, child: Text('退出', style: TextStyle(color: AppTheme.voiceRed))),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('取消')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text('退出', style: TextStyle(color: AppTheme.voiceRed))),
         ],
       ),
     );
+
+    if (confirmed == true) {
+      await ref.read(authStoreProvider.notifier).logout();
+      if (context.mounted) {
+        context.go('/');
+      }
+    }
   }
 }
