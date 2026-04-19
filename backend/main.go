@@ -65,6 +65,7 @@ func main() {
 		api.POST("/auth/register", authHandler.Register)
 		api.POST("/auth/login", authHandler.Login)
 		api.DELETE("/auth/delete", authHandler.Delete)
+		api.PUT("/profile", authHandler.UpdateProfile)
 
 		// Memories
 		api.GET("/memories", memoryHandler.List)

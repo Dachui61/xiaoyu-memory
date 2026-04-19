@@ -37,6 +37,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(authStoreProvider);
     return Scaffold(
       appBar: AppBar(title: Text('设置')),
       body: ListView(
@@ -44,9 +45,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           SizedBox(height: 12),
           // Profile section
           _buildSectionHeader('账号'),
-          _buildTile(icon: Icons.person_outline, title: '个人资料', onTap: () => context.go('/profile')),
-          _buildTile(icon: Icons.lock_outline, title: '修改密码', onTap: () {}),
-          _buildTile(icon: Icons.security, title: '隐私设置', onTap: () => context.go('/privacy')),
+          if (user != null) ...[
+            _buildTile(icon: Icons.person_outline, title: '个人资料', onTap: () => context.go('/profile')),
+            _buildTile(icon: Icons.lock_outline, title: '修改密码', onTap: () {}),
+            _buildTile(icon: Icons.security, title: '隐私设置', onTap: () => context.go('/privacy')),
+          ] else ...[
+            _buildTile(icon: Icons.login, title: '登录/注册', onTap: () => context.go('/login')),
+          ],
 
           _buildSectionHeader('同步'),
           _buildTile(icon: Icons.sync, title: '同步状态', subtitle: '已同步', trailing: Icon(Icons.check_circle, color: AppTheme.success, size: 20)),

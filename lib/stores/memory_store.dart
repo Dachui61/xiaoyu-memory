@@ -23,14 +23,11 @@ class MemoryStore extends StateNotifier<AsyncValue<List<Memory>>> {
   }
 
   Future<void> add(Memory memory) async {
-    try {
-      final created = await _api.createMemory(memory.toJson());
-      state.whenData((list) {
-        state = AsyncValue.data([created, ...list]);
-      });
-    } catch (e) {
-      // keep current state on error
-    }
+    state.whenData((list) {
+      // Avoid duplicates
+      if (list.any((m) => m.id == memory.id)) return;
+      state = AsyncValue.data([memory, ...list]);
+    });
   }
 
   Future<void> remove(String id) async {

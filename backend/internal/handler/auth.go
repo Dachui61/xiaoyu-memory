@@ -106,3 +106,15 @@ func (h *AuthHandler) Delete(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "account deleted"})
 }
+
+func (h *AuthHandler) UpdateProfile(c *gin.Context) {
+	var req struct {
+		Nickname string `json:"nickname"`
+		Phone    string `json:"phone"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "profile updated"})
+}
