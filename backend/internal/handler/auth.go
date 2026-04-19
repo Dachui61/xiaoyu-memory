@@ -91,3 +91,18 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		"expires_at": time.Now().Add(7 * 24 * time.Hour).Unix(),
 	})
 }
+
+func (h *AuthHandler) Delete(c *gin.Context) {
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if err := h.userRepo.Delete(userID.(string)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete account"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "account deleted"})
+}

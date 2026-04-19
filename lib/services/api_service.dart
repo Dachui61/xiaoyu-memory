@@ -119,4 +119,9 @@ class ApiService {
     }, options: Options(headers: _headers));
     return res.data;
   }
+
+  // Auth
+  Future<void> deleteAccount() async {
+    await _dio.delete('/auth/delete', options: Options(headers: _headers));
+  }
 }

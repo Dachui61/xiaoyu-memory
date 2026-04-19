@@ -71,3 +71,8 @@ func (r *UserRepository) GetByPhone(phone string) (id, hash string, ok bool, err
 	}
 	return id, hash, true, nil
 }
+
+func (r *UserRepository) Delete(id string) error {
+	_, err := r.db.Exec("DELETE FROM users WHERE id = ?", id)
+	return err
+}

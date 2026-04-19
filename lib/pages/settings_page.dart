@@ -46,7 +46,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           _buildSectionHeader('账号'),
           _buildTile(icon: Icons.person_outline, title: '个人资料', onTap: () => context.go('/profile')),
           _buildTile(icon: Icons.lock_outline, title: '修改密码', onTap: () {}),
-          _buildTile(icon: Icons.security, title: '隐私设置', onTap: () {}),
+          _buildTile(icon: Icons.security, title: '隐私设置', onTap: () => context.go('/privacy')),
 
           _buildSectionHeader('同步'),
           _buildTile(icon: Icons.sync, title: '同步状态', subtitle: '已同步', trailing: Icon(Icons.check_circle, color: AppTheme.success, size: 20)),

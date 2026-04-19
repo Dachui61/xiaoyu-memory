@@ -8,6 +8,7 @@ import '../pages/search_page.dart';
 import '../pages/settings_page.dart';
 import '../pages/login_page.dart';
 import '../pages/profile_page.dart';
+import '../pages/privacy_settings_page.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -25,6 +26,7 @@ final router = GoRouter(
     GoRoute(path: '/memory/new', builder: (_, __) => NewMemoryPage()),
     GoRoute(path: '/memory/:id', builder: (_, state) => MemoryDetailPage(id: state.pathParameters['id']!)),
     GoRoute(path: '/profile', builder: (_, __) => ProfilePage()),
+    GoRoute(path: '/privacy', builder: (_, __) => PrivacySettingsPage()),
   ],
 );
 
