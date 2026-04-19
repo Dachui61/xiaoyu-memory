@@ -81,6 +81,9 @@ func main() {
 
 		// Search
 		api.GET("/search", memoryHandler.Search)
+
+		// Sync
+		api.POST("/sync", memoryHandler.Sync)
 	}
 
 	log.Println("小宇记忆 backend starting on :8080")

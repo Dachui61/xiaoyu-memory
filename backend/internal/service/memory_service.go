@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"time"
 
 	"xiaoyu-memory-backend/internal/model"
 	"xiaoyu-memory-backend/internal/repository"
@@ -84,4 +85,9 @@ func (s *MemoryService) Chat(message, context string) (string, error) {
 
 func (s *MemoryService) Search(userID, q string) ([]model.Memory, error) {
 	return s.repo.Search(userID, q)
+}
+
+func (s *MemoryService) SyncSince(userID string, since int64) ([]model.Memory, error) {
+	t := time.Unix(since, 0)
+	return s.repo.GetUpdatedSince(userID, t)
 }

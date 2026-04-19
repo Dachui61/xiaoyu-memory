@@ -2,6 +2,8 @@ package repository
 
 import (
 	"database/sql"
+	"time"
+
 	"xiaoyu-memory-backend/internal/model"
 )
 
@@ -157,6 +159,36 @@ func (r *MemoryRepository) Search(userID, q string) ([]model.Memory, error) {
 		err := rows.Scan(&m.ID, &m.UserID, &m.Type, &m.Content, &m.Summary, &m.Title, &tags, &mediaURL, &m.CreatedAt, &m.UpdatedAt)
 		if err != nil {
 			continue
+		}
+		if tags != "" && tags != "[]" {
+			m.Tags = parseTags(tags[1 : len(tags)-1])
+		}
+		if mediaURL != "" {
+			m.MediaURL = mediaURL
+		}
+		memories = append(memories, m)
+	}
+	return memories, nil
+}
+
+// GetUpdatedSince returns memories updated after the given timestamp
+func (r *MemoryRepository) GetUpdatedSince(userID string, since time.Time) ([]model.Memory, error) {
+	rows, err := r.db.Query(`
+		SELECT id, user_id, type, content, summary, title, tags, media_url, created_at, updated_at
+		FROM memories WHERE user_id = ? AND updated_at > ? ORDER BY updated_at ASC
+	`, userID, since)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var memories []model.Memory
+	for rows.Next() {
+		var m model.Memory
+		var tags, mediaURL string
+		err := rows.Scan(&m.ID, &m.UserID, &m.Type, &m.Content, &m.Summary, &m.Title, &tags, &mediaURL, &m.CreatedAt, &m.UpdatedAt)
+		if err != nil {
+			return nil, err
 		}
 		if tags != "" && tags != "[]" {
 			m.Tags = parseTags(tags[1 : len(tags)-1])

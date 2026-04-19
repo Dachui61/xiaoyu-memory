@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"xiaoyu-memory-backend/internal/model"
 	"xiaoyu-memory-backend/internal/service"
@@ -203,4 +204,62 @@ func (h *MemoryHandler) Search(c *gin.Context) {
 		results = []model.Memory{}
 	}
 	c.JSON(http.StatusOK, gin.H{"results": results})
+}
+
+// Sync handles incremental sync with conflict detection
+func (h *MemoryHandler) Sync(c *gin.Context) {
+	var req struct {
+		Since    int64                  `json:"since"`
+		Changes  []model.Memory         `json:"changes"`
+		LastSync int64                  `json:"last_sync"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	// Get server changes since the client's last sync
+	serverChanges, err := h.svc.SyncSince("u1", req.LastSync)
+	if err != nil {
+		serverChanges = []model.Memory{}
+	}
+
+	// Process client changes and detect conflicts
+	var conflicts []map[string]interface{}
+	var accepted []model.Memory
+
+	for _, clientMem := range req.Changes {
+		existing, ok := h.svc.Get(clientMem.ID)
+		if !ok {
+			// New memory from client - accept it
+			accepted = append(accepted, clientMem)
+		} else if existing.UpdatedAt.After(time.Unix(req.LastSync, 0)) {
+			// Server has newer version - it's a conflict
+			conflicts = append(conflicts, map[string]interface{}{
+				"memory_id":        existing.ID,
+				"client_version":    clientMem.UpdatedAt,
+				"server_version":    existing.UpdatedAt,
+				"server_memory":     existing,
+			})
+		} else {
+			// Client is newer or equal - accept update
+			accepted = append(accepted, clientMem)
+		}
+	}
+
+	// Apply accepted changes
+	for _, mem := range accepted {
+		h.svc.Update(mem.ID, map[string]interface{}{
+			"content":   mem.Content,
+			"summary":  mem.Summary,
+			"title":    mem.Title,
+			"tags":     mem.Tags,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"server_changes": serverChanges,
+		"conflicts":      conflicts,
+		"synced_at":      time.Now().Unix(),
+	})
 }
