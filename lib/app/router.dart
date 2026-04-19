@@ -7,6 +7,7 @@ import '../pages/ai_chat_page.dart';
 import '../pages/search_page.dart';
 import '../pages/settings_page.dart';
 import '../pages/login_page.dart';
+import '../pages/profile_page.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -23,12 +24,13 @@ final router = GoRouter(
     GoRoute(path: '/login', builder: (_, __) => LoginPage()),
     GoRoute(path: '/memory/new', builder: (_, __) => NewMemoryPage()),
     GoRoute(path: '/memory/:id', builder: (_, state) => MemoryDetailPage(id: state.pathParameters['id']!)),
+    GoRoute(path: '/profile', builder: (_, __) => ProfilePage()),
   ],
 );
 
 class MainShell extends StatefulWidget {
   final Widget child;
-  MainShell({required this.child});
+  const MainShell({super.key, required this.child});
 
   @override
   State<MainShell> createState() => _MainShellState();

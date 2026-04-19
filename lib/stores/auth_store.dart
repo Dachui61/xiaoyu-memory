@@ -57,4 +57,10 @@ class AuthStore extends StateNotifier<User?> {
     await prefs.remove('token');
     state = null;
   }
+
+  void updateProfile(String nickname, String phone) {
+    if (state != null) {
+      state = User(id: state!.id, phone: phone, email: state!.email);
+    }
+  }
 }

@@ -102,4 +102,12 @@ class ApiService {
     final list = res.data['results'] as List? ?? [];
     return list.map((e) => Memory.fromJson(e)).toList();
   }
+
+  // Profile
+  Future<void> updateProfile(String nickname, String phone) async {
+    await _dio.put('/profile', data: {
+      'nickname': nickname,
+      'phone': phone,
+    }, options: Options(headers: _headers));
+  }
 }

@@ -16,7 +16,7 @@ class SettingsPage extends ConsumerWidget {
           SizedBox(height: 12),
           // Profile section
           _buildSectionHeader('账号'),
-          _buildTile(icon: Icons.person_outline, title: '个人资料', onTap: () {}),
+          _buildTile(icon: Icons.person_outline, title: '个人资料', onTap: () => context.go('/profile')),
           _buildTile(icon: Icons.lock_outline, title: '修改密码', onTap: () {}),
           _buildTile(icon: Icons.security, title: '隐私设置', onTap: () {}),
 
