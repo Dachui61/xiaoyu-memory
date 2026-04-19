@@ -2,15 +2,4 @@ include: package:flutter_lints/flutter.yaml
 
 linter:
   rules:
-    # 允许 info 级别，不阻塞 CI
-    prefer_const_constructors: false
-    prefer_const_constructors_in_immutables: false
-    use_key_in_widget_constructors: false
-    deprecated_member_use: false
-    empty_catches: false
     unused_import: false
-
-analyzer:
-  errors:
-    info: ignore
-    warning: ignore
