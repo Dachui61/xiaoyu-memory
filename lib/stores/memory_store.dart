@@ -23,11 +23,15 @@ class MemoryStore extends StateNotifier<AsyncValue<List<Memory>>> {
   }
 
   Future<void> add(Memory memory) async {
-    state.whenData((list) {
-      // Avoid duplicates
-      if (list.any((m) => m.id == memory.id)) return;
-      state = AsyncValue.data([memory, ...list]);
-    });
+    // Always add to current state, whether loading, error, or data
+    state = state.when(
+      data: (list) {
+        if (list.any((m) => m.id == memory.id)) return AsyncValue.data(list);
+        return AsyncValue.data([memory, ...list]);
+      },
+      loading: () => AsyncValue.data([memory]),
+      error: (e, st) => AsyncValue.data([memory]),
+    );
   }
 
   Future<void> remove(String id) async {
