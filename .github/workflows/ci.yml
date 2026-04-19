@@ -24,8 +24,8 @@ jobs:
           channel: 'stable'
           cache: true
       
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Clear problematic pub cache
+        run: rm -rf ~/.pub-cache/hosted/pub.dev/record_linux-0.7.2 2>/dev/null; flutter pub get
       
       - name: Run tests
         run: flutter test
@@ -44,8 +44,8 @@ jobs:
           channel: 'stable'
           cache: true
       
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Clear problematic pub cache
+        run: rm -rf ~/.pub-cache/hosted/pub.dev/record_linux-0.7.2 2>/dev/null; flutter pub get
       
       - name: Analyze
         run: flutter analyze || true
@@ -65,8 +65,8 @@ jobs:
           channel: 'stable'
           cache: true
       
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Clear problematic pub cache
+        run: rm -rf ~/.pub-cache/hosted/pub.dev/record_linux-0.7.2 2>/dev/null; flutter pub get
       
       - name: iOS build (simulator)
         run: flutter build ios --simulator --no-codesign
@@ -86,8 +86,8 @@ jobs:
           channel: 'stable'
           cache: true
       
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Clear problematic pub cache
+        run: rm -rf ~/.pub-cache/hosted/pub.dev/record_linux-0.7.2 2>/dev/null; flutter pub get
       
       - name: Setup Java
         uses: actions/setup-java@v4
