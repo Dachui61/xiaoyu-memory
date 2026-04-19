@@ -17,6 +17,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   bool _isLogin = true;
   bool _isLoading = false;
   bool _obscurePassword = true;
+  String? _phoneError;
+  String? _passwordError;
 
   @override
   void dispose() {
@@ -28,12 +30,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _submit() async {
     final phone = _phoneController.text.trim();
     final password = _passwordController.text;
-    if (phone.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('请填写手机号和密码'), backgroundColor: AppTheme.warning),
-      );
-      return;
+
+    // Reset errors
+    setState(() {
+      _phoneError = null;
+      _passwordError = null;
+    });
+
+    // Validation
+    bool hasError = false;
+    if (phone.isEmpty) {
+      setState(() => _phoneError = '请输入手机号');
+      hasError = true;
+    } else if (!_isValidPhone(phone)) {
+      setState(() => _phoneError = '请输入正确的手机号');
+      hasError = true;
     }
+
+    if (password.isEmpty) {
+      setState(() => _passwordError = '请输入密码');
+      hasError = true;
+    } else if (password.length < 6) {
+      setState(() => _passwordError = '密码至少6位');
+      hasError = true;
+    }
+
+    if (hasError) return;
 
     setState(() => _isLoading = true);
     try {
@@ -54,6 +76,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  bool _isValidPhone(String phone) {
+    return RegExp(r'^1[3-9]\d{9}$').hasMatch(phone);
   }
 
   @override
@@ -95,7 +121,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           decoration: BoxDecoration(
                             color: _isLogin ? Colors.white : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
-                            boxShadow: _isLogin ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)] : null,
+                            boxShadow: _isLogin ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)] : null,
                           ),
                           child: Text('登录', style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textPrimary), textAlign: TextAlign.center),
                         ),
@@ -109,7 +135,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           decoration: BoxDecoration(
                             color: !_isLogin ? Colors.white : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
-                            boxShadow: !_isLogin ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)] : null,
+                            boxShadow: !_isLogin ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)] : null,
                           ),
                           child: Text('注册', style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textPrimary), textAlign: TextAlign.center),
                         ),
@@ -126,6 +152,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 decoration: InputDecoration(
                   hintText: '手机号',
                   prefixIcon: Icon(Icons.phone_outlined, color: AppTheme.textSecondary),
+                  errorText: _phoneError,
                 ),
               ),
               SizedBox(height: 16),
@@ -140,6 +167,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: AppTheme.textSecondary),
                     onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
+                  errorText: _passwordError,
                 ),
               ),
               SizedBox(height: 32),
