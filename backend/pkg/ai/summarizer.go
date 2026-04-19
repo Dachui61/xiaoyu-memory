@@ -23,7 +23,7 @@ func NewSummarizer() *Summarizer {
 	}
 	return &Summarizer{
 		apiKey: apiKey,
-		model:  "MiniMax-Text-01",
+		model:  "MiniMax-M2.7",
 	}
 }
 
@@ -52,7 +52,11 @@ type Usage struct {
 }
 
 func (s *Summarizer) callMiniMax(system, user string) (string, error) {
-	url := "https://api.minimax.io/v1/text/chatcompletion_pro?GroupId=" + os.Getenv("MINIMAX_GROUP_ID")
+	url := "https://api.minimaxi.com/v1/chat/completions"
+	groupId := os.Getenv("MINIMAX_GROUP_ID")
+	if groupId != "" {
+		url += "?GroupId=" + groupId
+	}
 
 	reqBody := MiniMaxRequest{
 		Model: s.model,
